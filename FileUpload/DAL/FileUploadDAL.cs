@@ -28,10 +28,10 @@ namespace FileUploadAPI.DAL
             using (var context = new FileUploadContext())
             {
                 transactionDatas = context.TransactionData
-                                .Where(s => string.IsNullOrEmpty(s.CurrencyCode) || s.CurrencyCode == CurrencyCode)
+                                .Where(s => string.IsNullOrEmpty(CurrencyCode) || s.CurrencyCode == CurrencyCode)
                                 .Where(s => !DateTimeFilter.HasValue || s.TransactionDatetime >= DateTimeFilter)
                                 .Where(s => !DateTimeFilter.HasValue || s.TransactionDatetime <= DateTimeFilter)
-                                .Where(s => string.IsNullOrEmpty(s.Status) || s.Status == Status)
+                                .Where(s => string.IsNullOrEmpty(Status) || s.Status == Status)
                                 .ToList();
 
             }

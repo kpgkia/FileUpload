@@ -12,11 +12,9 @@ namespace FileUploadAPI.Controllers
     [Route("[controller]")]
     public class FileUploadAPIController : ControllerBase
     {
-        private readonly IConfiguration Configuration;
 
         public FileUploadAPIController(IConfiguration configuration)
         {
-            Configuration = configuration;
         }
 
 

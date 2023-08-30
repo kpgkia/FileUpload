@@ -19,7 +19,7 @@ public partial class FileUploadContext : DbContext
     public virtual DbSet<TransactionData> TransactionData { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:FileUpload");
+        => optionsBuilder.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=FileUpload");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
