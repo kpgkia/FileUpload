@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace FileUploadAPI.DAL
 {
-    public class FileUpload
+    public class FileUploadDAL
     {
         public bool InsertTransaction(List<TransactionData> transactionDatas)
         {
