@@ -1,10 +1,10 @@
 ﻿namespace FileUploadAPI.DTO
 {
-    public class TransactionDatasDTO
+    public class TransactionDataDTO
     {
         public string TransactionId { get; set; } = null!;
 
-        public decimal Amount { get; set; }
+        public string Amount { get; set; } = null!;
 
         public string CurrencyCode { get; set; } = null!;
 

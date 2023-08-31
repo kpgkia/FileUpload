@@ -5,6 +5,11 @@ using System.Buffers.Text;
 using System.Xml;
 using FileUploadAPI.DTO;
 using Microsoft.Extensions.Configuration;
+using CsvHelper;
+using CsvHelper.Configuration;
+using System.Globalization;
+using FileUploadAPI.CSVHelperMap;
+using System.Xml.Serialization;
 
 namespace FileUploadAPI.Controllers
 {
@@ -17,39 +22,77 @@ namespace FileUploadAPI.Controllers
         {
         }
 
-
         [HttpPost]
-        public IActionResult UploadFile([FromBody] FileUploadDTO model)
+        public IActionResult UploadFile()
         {
-            if (!string.IsNullOrEmpty(model.FileData))
-            {
-                if (model.FileName.EndsWith(".csv"))
-                {
-                    // Parse CSV data
-                    string[] csvLines = model.FileData.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            IFormFile file = Request.Form.Files.FirstOrDefault();
 
-                    List<string[]> parsedCsv = new List<string[]>();
-                    foreach (var line in csvLines)
+            try
+            {
+                if (file != null && file.Length > 0)
+                {
+                    string fileExtension = Path.GetExtension(file.FileName);
+
+                    if (fileExtension.Equals(".csv", StringComparison.OrdinalIgnoreCase))
                     {
-                        string[] values = line.Split(',');
-                        parsedCsv.Add(values);
+                        using (var reader = new StreamReader(file.OpenReadStream()))
+                        using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+                        {
+                            HasHeaderRecord = false,
+                            Delimiter = ",",
+                            Quote = '"'
+                        }))
+                        {
+                            csv.Context.RegisterClassMap<TransactionDataDTOCsvMap>();
+                            var records = csv.GetRecords<TransactionDataDTO>().ToList();
+
+                            var TransactionDataDTOs = new List<TransactionDataDTO>();
+                            foreach (var record in records)
+                            {
+                                var transactionDataDTO = new TransactionDataDTO();
+                                transactionDataDTO.TransactionId = record.TransactionId;
+                                transactionDataDTO.Amount = record.Amount.Remove(',');
+                                transactionDataDTO.TransactionDatetime = record.TransactionDatetime;
+                                transactionDataDTO.Status = record.Status;
+
+                                TransactionDataDTOs.Add(transactionDataDTO);
+                            }
+
+                            (bool success, string msg) = new FileUploadBL().InsertTransactionDatas(TransactionDataDTOs, "csv");
+                            if(!success)
+                                return BadRequest(new { Message = msg });
+                        }
+                    }
+                    else if (fileExtension.Equals(".xml", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // XML file
+                        using (var reader = new StreamReader(file.OpenReadStream()))
+                        {
+                            var serializer = new XmlSerializer(typeof(List<TransactionDataDTO>));
+                            var transactionDataList = (List<TransactionDataDTO>)serializer.Deserialize(reader);
+
+                            // Process the deserialized transactionDataList 
+
+                            (bool success, string msg) = new FileUploadBL().InsertTransactionDatas(transactionDataList, "xml");
+                            if (!success)
+                                return BadRequest(new { Message = msg });
+                        }
+
+
+                        return Ok(new { Message = "XML file uploaded and processed successfully." });
+                    }
+                    else
+                    {
+                        // Unsupported file type
+                        return BadRequest(new { Message = "Unknown Format" });
                     }
 
-                    // Process parsedCsv as needed
-                }
-                else if (model.FileName.EndsWith(".xml"))
-                {
-                    // Parse XML data
-                    XmlDocument xmlDoc = new XmlDocument();
-                    xmlDoc.LoadXml(model.FileData);
-
-                    // Process xmlDoc as needed
+                    return Ok(new { Message = "File uploaded successfully." });
                 }
 
-                return Ok(new { Message = "File uploaded and parsed successfully." });
+                return BadRequest(new { Message = "No file data was provided." });
             }
-
-            return BadRequest(new { Message = "No file data was provided." });
+            catch (Exception ex) {  return BadRequest(ex); }
         }
 
 

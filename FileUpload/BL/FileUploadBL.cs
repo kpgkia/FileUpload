@@ -1,12 +1,13 @@
 ﻿using FileUploadAPI.DTO;
 using FileUploadAPI.Models;
 using FileUploadAPI.DAL;
+using System.Linq;
 
 namespace FileUploadAPI.BL
 {
     public class FileUploadBL
     {
-        public (bool, string) InsertTransactionDatas(List<TransactionDatasDTO> transactionDatasDTOs, string FileFormat)
+        public (bool, string) InsertTransactionDatas(List<TransactionDataDTO> transactionDatasDTOs, string FileFormat)
         {
             var transactionDatas = new List<TransactionData>();
             bool success = false;
@@ -20,7 +21,7 @@ namespace FileUploadAPI.BL
                     TransactionData.TransactionId = dto.TransactionId;
                     TransactionData.CurrencyCode = dto.CurrencyCode;
                     TransactionData.TransactionDatetime = dto.TransactionDatetime;
-
+                    TransactionData.Amount = decimal.Parse(dto.Amount);
                     switch (FileFormat.ToLower())
                     {
                         case "csv":
@@ -65,15 +66,15 @@ namespace FileUploadAPI.BL
             return (success, message);
         }
 
-        public List<TransactionDatasDTO> GetTransactionDatas(string? CurrencyCode, DateTime? DateTimeFilter, string? Status)
+        public List<TransactionDataDTO> GetTransactionDatas(string? CurrencyCode, DateTime? DateTimeFilter, string? Status)
         {
-            var QueryResults = new List<TransactionDatasDTO>();
+            var QueryResults = new List<TransactionDataDTO>();
             var fileUploadDAL = new FileUploadDAL();
             var trxDatas = fileUploadDAL.GetTransaction(CurrencyCode, DateTimeFilter, Status);
  
             foreach(var trxData in trxDatas)
             {
-                var dto = new TransactionDatasDTO();
+                var dto = new TransactionDataDTO();
                 dto.TransactionId = trxData.TransactionId;
                 dto.CurrencyCode = trxData.CurrencyCode;
                 dto.TransactionDatetime = trxData.TransactionDatetime;
